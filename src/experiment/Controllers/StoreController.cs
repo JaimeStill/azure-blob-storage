@@ -8,6 +8,11 @@ public class StoreController(IStore store) : ApiController
 {
     readonly IStore store = store;
 
+    [HttpGet("[action]/{container}")]
+    public async Task<IActionResult> CreateContainer(
+        [FromRoute] string container
+    ) => ApiResult(await store.CreateContainer(container));
+
     [HttpGet("[action]/{container}/{file}")]
     public async Task<FileContentResult> Download(
         [FromRoute] string container,

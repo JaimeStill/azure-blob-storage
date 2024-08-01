@@ -23,6 +23,21 @@ public class AzureBlobStore : IStore
         );
     }
 
+    public async Task<ApiMessage<StoreContainer>> CreateContainer(string container)
+    {
+        BlobContainerClient ctr = store.GetBlobContainerClient(container);
+
+        if (ctr.Exists())
+            return new("CreateContainer", $"Container '{container}' already exists");
+
+        await ctr.CreateAsync();
+
+        return new(
+            new StoreContainer() { Name = container },
+            $"Container '{container}' was created"
+        );
+    }
+
     public async Task<FileContentResult> Download(string container, string file)
     {
         BlobContainerClient ctr = store.GetBlobContainerClient(container);
@@ -33,11 +48,11 @@ public class AzureBlobStore : IStore
 
             if (blob.Exists())
             {
-                BlobDownloadResult result = await blob.DownloadContentAsync();
-
+                using MemoryStream stream = new();
+                await blob.DownloadToAsync(stream);
                 return new FileContentResult(
-                    result.Content.ToArray(),
-                    result.Details.ContentType
+                    stream.ToArray(),
+                    blob.GetProperties().Value.ContentType
                 )
                 {
                     FileDownloadName = file
@@ -105,7 +120,10 @@ public class AzureBlobStore : IStore
     )
     {
         BlobContainerClient ctr = store.GetBlobContainerClient(container);
-        await ctr.CreateIfNotExistsAsync();
+
+        if (!ctr.Exists())
+            await ctr.CreateAsync();
+
         BlobClient blob = ctr.GetBlobClient(upload.FileName);
         await blob.UploadAsync(upload.OpenReadStream(), true);
 

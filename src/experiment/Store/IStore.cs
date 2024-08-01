@@ -6,6 +6,7 @@ public interface IStore
 {
     string Root { get; }
 
+    Task<ApiMessage<StoreContainer>> CreateContainer(string container);
     Task<FileContentResult> Download(string container, string name);
     Task<List<StoreContainer>> GetContainers();
     Task<StoreContainer?> GetContainer(string container);
