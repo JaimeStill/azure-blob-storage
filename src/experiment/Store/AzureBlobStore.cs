@@ -23,37 +23,15 @@ public class AzureBlobStore : IStore
         );
     }
 
-    public async Task<ApiMessage<StoreFile>> Delete(string container, string file)
-    {
-        BlobContainerClient ctr = store.GetBlobContainerClient(container);
-
-        if (await ctr.ExistsAsync())
-        {
-            BlobClient blob = ctr.GetBlobClient(file);
-
-            if (await blob.ExistsAsync())
-            {
-                StoreFile result = FromBlobClient(blob);
-                await blob.DeleteAsync();
-
-                return new(result, $"Blob '{file}' was deleted from container '{container}'");
-            }
-            else
-                return new("Delete", $"Blob '{file}' was not found in container '{container}'");
-        }
-        else
-            return new("Delete", $"Container '{container}' was not found");
-    }
-
     public async Task<FileContentResult> Download(string container, string file)
     {
         BlobContainerClient ctr = store.GetBlobContainerClient(container);
 
-        if (await ctr.ExistsAsync())
+        if (ctr.Exists())
         {
             BlobClient blob = ctr.GetBlobClient(file);
 
-            if (await blob.ExistsAsync())
+            if (blob.Exists())
             {
                 BlobDownloadResult result = await blob.DownloadContentAsync();
 
@@ -96,7 +74,7 @@ public class AzureBlobStore : IStore
         BlobContainerClient ctr = store.GetBlobContainerClient(container);
         List<StoreFile> files = [];
 
-        if (await ctr.ExistsAsync())
+        if (ctr.Exists())
         {
             await foreach (BlobItem blob in ctr.GetBlobsAsync())
                 files.Add(FromBlobClient(ctr.GetBlobClient(blob.Name)));
@@ -109,7 +87,7 @@ public class AzureBlobStore : IStore
     {
         BlobContainerClient ctr = store.GetBlobContainerClient(container);
 
-        if (await ctr.ExistsAsync())
+        if (ctr.Exists())
         {
             BlobClient blob = ctr.GetBlobClient(file);
 
@@ -135,6 +113,43 @@ public class AzureBlobStore : IStore
             FromBlobClient(ctr.GetBlobClient(upload.FileName)),
             $"Blob '{upload.FileName}' was uploaded to container '{container}'"
         );
+    }
+
+    public async Task<ApiMessage<StoreContainer>> DeleteContainer(string container)
+    {
+        BlobContainerClient ctr = store.GetBlobContainerClient(container);
+
+        if (ctr.Exists())
+        {
+            StoreContainer result = new() { Name = container };
+            await ctr.DeleteAsync();
+
+            return new(result, $"Container '{container}' was deleted");
+        }
+        else
+            return new("DeleteContainer", $"Container '{container}' was not found");
+    }
+
+    public async Task<ApiMessage<StoreFile>> DeleteFile(string container, string file)
+    {
+        BlobContainerClient ctr = store.GetBlobContainerClient(container);
+
+        if (ctr.Exists())
+        {
+            BlobClient blob = ctr.GetBlobClient(file);
+
+            if (blob.Exists())
+            {
+                StoreFile result = FromBlobClient(blob);
+                await blob.DeleteAsync();
+
+                return new(result, $"Blob '{file}' was deleted from container '{container}'");
+            }
+            else
+                return new("Delete", $"Blob '{file}' was not found in container '{container}'");
+        }
+        else
+            return new("Delete", $"Container '{container}' was not found");
     }
 
     static StoreFile FromBlobClient(BlobClient blob) => new()

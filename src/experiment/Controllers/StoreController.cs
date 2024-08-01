@@ -8,12 +8,6 @@ public class StoreController(IStore store) : ApiController
 {
     readonly IStore store = store;
 
-    [HttpDelete("[action]/{container}/{file}")]
-    public async Task<IActionResult> Delete(
-        [FromRoute] string container,
-        [FromRoute] string file
-    ) => ApiResult(await store.Delete(container, file));
-
     [HttpGet("[action]/{container}/{file}")]
     public async Task<FileContentResult> Download(
         [FromRoute] string container,
@@ -45,4 +39,15 @@ public class StoreController(IStore store) : ApiController
         IFormFile upload,
         [FromRoute] string container
     ) => ApiResult(await store.Upload(upload, container));
+
+    [HttpDelete("[action]/{container}")]
+    public async Task<IActionResult> DeleteContainer(
+        [FromRoute] string container
+    ) => ApiResult(await store.DeleteContainer(container));
+
+    [HttpDelete("[action]/{container}/{file}")]
+    public async Task<IActionResult> DeleteFile(
+        [FromRoute] string container,
+        [FromRoute] string file
+    ) => ApiResult(await store.DeleteFile(container, file));
 }
