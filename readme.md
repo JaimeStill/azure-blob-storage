@@ -1,6 +1,7 @@
 # Azure Blob Storage
 
 * [Quickstart](./src/quickstart/)
+* [Experiment](./src/experiment/)
 
 Azure Blob Storage is Microsoft's object storage solution for the cloud. Blob storage is designed for:
 
